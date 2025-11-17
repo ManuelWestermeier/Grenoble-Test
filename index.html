@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Quiz: Grenoble, ville verte — 10 questions</title>
+  <style>
+    :root{
+      --bg:#0f1724; /* deep blue */
+      --card:#0b1220;
+      --accent:#3ddc84;
+      --muted: #9aa4b2;
+      --glass: rgba(255,255,255,0.04);
+      --glass-2: rgba(255,255,255,0.02);
+      --radius:16px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      min-height:100%;
+      background: radial-gradient(1200px 600px at 10% 10%, #062034 0%, transparent 15%),
+                  radial-gradient(900px 450px at 90% 90%, #072634 0%, transparent 15%),
+                  linear-gradient(180deg,var(--bg),#071225 60%);
+      color:#e6eef6;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:28px;
+    }
+
+    .container{
+      width:100%;
+      max-width:980px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:20px;
+      box-shadow: 0 10px 30px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+      overflow:hidden;
+      display:grid;
+      grid-template-columns: 1fr 380px;
+      gap:0;
+    }
+
+    /* Left: quiz */
+    .quiz{
+      padding:32px;
+    }
+    header.app-header{
+      display:flex;align-items:center;gap:16px;margin-bottom:16px
+    }
+    .logo{
+      width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#77e0a8);
+      display:flex;align-items:center;justify-content:center;font-weight:700;color:#052018;font-size:20px;
+      box-shadow:0 6px 18px rgba(61,220,132,0.14);
+    }
+    h1{font-size:20px;margin:0}
+    p.subtitle{margin:0;color:var(--muted);font-size:13px}
+
+    .card{
+      background: linear-gradient(180deg,var(--glass), var(--glass-2));
+      border-radius: var(--radius);
+      padding:20px;
+      margin-top:18px;
+      box-shadow: 0 6px 18px rgba(2,6,23,0.5);
+    }
+
+    .question-number{color:var(--muted);font-size:13px}
+    .question-text{font-size:18px;margin:8px 0 14px}
+
+    .choices{display:flex;flex-direction:column;gap:12px}
+    .choice{
+      background:transparent;border:1px solid rgba(255,255,255,0.06);padding:14px;border-radius:12px;cursor:pointer;display:flex;align-items:center;gap:12px;
+      transition:all .18s ease;user-select:none;
+    }
+    .choice:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(2,6,23,0.6)}
+    .choice.correct{border-color:rgba(61,220,132,0.28);background:linear-gradient(90deg, rgba(61,220,132,0.06), transparent)}
+    .choice.wrong{border-color:rgba(255,80,80,0.22);background:linear-gradient(90deg, rgba(255,80,80,0.04), transparent)}
+
+    .btn-row{display:flex;gap:10px;align-items:center;margin-top:16px}
+    button.btn{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:10px 14px;border-radius:10px;color:inherit;cursor:pointer}
+    button.btn.primary{background:linear-gradient(90deg,var(--accent),#6be8a7);color:#052018;border:0}
+
+    /* Right: sidebar */
+    .sidebar{
+      padding:28px;border-left:1px solid rgba(255,255,255,0.02);background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
+      display:flex;flex-direction:column;gap:18px;align-items:stretch
+    }
+    .score{font-size:13px;color:var(--muted)}
+    .progress-bar{height:12px;background:rgba(255,255,255,0.03);border-radius:999px;overflow:hidden}
+    .progress-inner{height:100%;background:linear-gradient(90deg,var(--accent),#7df1b2);width:0%}
+    .result-big{font-size:28px;font-weight:700;margin:6px 0}
+    .small{font-size:13px;color:var(--muted)}
+    .meta{display:flex;gap:8px;flex-wrap:wrap}
+
+    footer.note{font-size:12px;color:var(--muted);margin-top:auto}
+
+    /* Responsive */
+    @media (max-width:900px){
+      .container{grid-template-columns:1fr;}
+      .sidebar{order:-1}
+    }
+  </style>
+</head>
+<body>
+  <div class="container" role="application" aria-label="Quiz Grenoble">
+    <div class="quiz">
+      <header class="app-header">
+        <div class="logo">GZ</div>
+        <div>
+          <h1>Quiz : Grenoble, ville verte</h1>
+          <p class="subtitle">10 questions — chaque question a 2 réponses (1 vraie, 1 fausse)</p>
+        </div>
+      </header>
+
+      <section class="card" id="questionCard">
+        <div class="question-number" id="qNum">Question 1 / 10</div>
+        <div class="question-text" id="qText">Chargement...</div>
+
+        <div class="choices" id="choices">
+          <!-- choices appended by JS -->
+        </div>
+
+        <div class="btn-row">
+          <button class="btn" id="skipBtn">Passer</button>
+          <button class="btn primary" id="nextBtn" disabled>Suivant</button>
+          <div style="flex:1"></div>
+          <button class="btn" id="restartBtn">Recommencer</button>
+        </div>
+      </section>
+
+      <div style="margin-top:18px;text-align:center;color:var(--muted);font-size:13px">Tip: clique sur une réponse pour valider.</div>
+    </div>
+
+    <aside class="sidebar">
+      <div class="card">
+        <div class="score">Progression</div>
+        <div class="progress-bar" aria-hidden="true"><div class="progress-inner" id="progressInner"></div></div>
+        <div style="height:12px"></div>
+        <div class="meta">
+          <div>
+            <div class="small">Score</div>
+            <div class="result-big" id="score">0 / 10</div>
+          </div>
+          <div>
+            <div class="small">Correct</div>
+            <div class="result-big" id="correct">0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="small">Réponses rapides</div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="btn" id="showAllBtn">Montrer toutes les bonnes réponses</button>
+          <button class="btn" id="shuffleBtn">Mélanger</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="small">Résultat final</div>
+        <div id="finalMsg" style="margin-top:8px;color:var(--muted)">Terminez le quiz pour voir le message.</div>
+      </div>
+
+      <footer class="note">Langue : français — questions simples.</footer>
+    </aside>
+  </div>
+
+  <script>
+    // Questions: format {q: 'Question', a: 'bonne réponse', b: 'mauvaise réponse'}
+    const questions = [
+      {q: "Pourquoi parle-t-on de Grenoble dans ce texte ?", a: "Parce que c'est une ville écologique.", b: "Parce que c'est une île au milieu de la mer."},
+      {q: "Où est située Grenoble ?", a: "Dans les Alpes.", b: "Au bord d'un grand désert."},
+      {q: "Que fait le maire pour l'écologie ?", a: "Il crée plus de pistes cyclables.", b: "Il ferme tous les parcs."},
+      {q: "Le quartier de Bonne est...", a: "Un écoquartier avec des bâtiments économes.", b: "Un grand centre commercial sans espaces verts."},
+      {q: "Qu'arrive-t-il aux bus diesel ?", a: "On supprime ou remplace certains bus diesel.", b: "On ajoute plus de bus diesel dans la ville."},
+      {q: "On observe à Grenoble de plus en plus...", a: "De vélos en ville.", b: "De grandes usines polluantes partout."},
+      {q: "Pourquoi Grenoble attire les stations de sports d'hiver ?", a: "Parce qu'elle est proche des stations de ski.", b: "Parce qu'elle est en bord de mer."},
+      {q: "Les bâtiments modernes à Grenoble sont souvent...", a: "Plus économes en énergie.", b: "Faits pour consommer beaucoup d'énergie."},
+      {q: "Quelle est une action pour réduire la pollution ?", a: "Développer les transports non polluants.", b: "Augmenter le trafic de camions en ville."},
+      {q: "Grenoble veut être un exemple pour...", a: "Les villes du futur et l'écologie.", b: "La construction de grands parkings au centre-ville."}
+    ];
+
+    // state
+    let order = [...Array(questions.length).keys()];
+    let index = 0;
+    let score = 0;
+    let correctCount = 0;
+    let answered = 0;
+
+    // elements
+    const qNumEl = document.getElementById('qNum');
+    const qTextEl = document.getElementById('qText');
+    const choicesEl = document.getElementById('choices');
+    const nextBtn = document.getElementById('nextBtn');
+    const skipBtn = document.getElementById('skipBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const scoreEl = document.getElementById('score');
+    const correctEl = document.getElementById('correct');
+    const progressInner = document.getElementById('progressInner');
+    const finalMsg = document.getElementById('finalMsg');
+    const showAllBtn = document.getElementById('showAllBtn');
+    const shuffleBtn = document.getElementById('shuffleBtn');
+
+    function shuffleArray(a){
+      for(let i=a.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [a[i],a[j]]=[a[j],a[i]];
+      }
+    }
+
+    function start(){
+      // shuffle questions order once
+      order = [...Array(questions.length).keys()];
+      shuffleArray(order);
+      index = 0; score = 0; correctCount = 0; answered = 0;
+      updateSidebar();
+      renderQuestion();
+      finalMsg.textContent = 'Terminez le quiz pour voir le message.';
+    }
+
+    function renderQuestion(){
+      const qi = order[index];
+      const q = questions[qi];
+      qNumEl.textContent = `Question ${index+1} / ${questions.length}`;
+      qTextEl.textContent = q.q;
+      choicesEl.innerHTML = '';
+      nextBtn.disabled = true;
+
+      // randomize position of a (correct) and b (wrong)
+      const pair = [{k:'a',t:q.a},{k:'b',t:q.b}];
+      if(Math.random()>0.5) pair.reverse();
+
+      pair.forEach(item=>{
+        const btn = document.createElement('button');
+        btn.className = 'choice';
+        btn.type='button';
+        btn.innerHTML = `<span style="flex:1;text-align:left">${item.t}</span>`;
+        btn.dataset.key = item.k; // 'a' or 'b'
+        btn.addEventListener('click', onAnswer);
+        choicesEl.appendChild(btn);
+      });
+
+    }
+
+    function onAnswer(e){
+      const btn = e.currentTarget;
+      // prevent double answer
+      if(choicesEl.dataset.answered==='true') return;
+      choicesEl.dataset.answered='true';
+
+      const chosen = btn.dataset.key; // 'a' or 'b'
+      const qi = order[index];
+      const correct = 'a';
+
+      // mark buttons
+      Array.from(choicesEl.children).forEach(ch=>{
+        if(ch.dataset.key === correct){
+          ch.classList.add('correct');
+        }
+        if(ch===btn && ch.dataset.key !== correct){
+          ch.classList.add('wrong');
+        }
+        ch.disabled = true;
+      });
+
+      // update score
+      answered++;
+      if(chosen===correct){ score+=1; correctCount+=1; }
+      // show next enabled
+      nextBtn.disabled = false;
+      updateSidebar();
+
+      // auto move after short delay
+      setTimeout(()=>{
+        // if last question, show final
+        if(index === questions.length-1){
+          showFinal();
+        }
+      },700);
+    }
+
+    function updateSidebar(){
+      scoreEl.textContent = `${score} / ${questions.length}`;
+      correctEl.textContent = `${correctCount}`;
+      const pct = Math.round(((index)/questions.length)*100);
+      progressInner.style.width = `${pct}%`;
+    }
+
+    nextBtn.addEventListener('click', ()=>{
+      // clear answered flag
+      choicesEl.dataset.answered='false';
+      if(index < questions.length-1){
+        index++;
+        renderQuestion();
+      } else {
+        showFinal();
+      }
+      updateSidebar();
+    });
+
+    skipBtn.addEventListener('click', ()=>{
+      // count as answered but incorrect
+      if(choicesEl.dataset.answered==='true') return;
+      choicesEl.dataset.answered='true';
+      answered++;
+      // visually mark correct
+      Array.from(choicesEl.children).forEach(ch=>{
+        if(ch.dataset.key === 'a') ch.classList.add('correct');
+        ch.disabled = true;
+      });
+      nextBtn.disabled = false;
+      updateSidebar();
+    });
+
+    restartBtn.addEventListener('click', start);
+
+    shuffleBtn.addEventListener('click', ()=>{
+      shuffleArray(order);
+      index = 0; score = 0; correctCount = 0; answered = 0;
+      choicesEl.dataset.answered='false';
+      renderQuestion(); updateSidebar();
+    });
+
+    showAllBtn.addEventListener('click', ()=>{
+      // show all correct answers in list
+      const list = questions.map((q,i)=>`${i+1}. ${q.a}`).join('\n');
+      alert('Bonnes réponses:\n\n'+list);
+    });
+
+    function showFinal(){
+      // freeze buttons
+      Array.from(choicesEl.children).forEach(ch=>ch.disabled=true);
+      // progress 100%
+      progressInner.style.width = '100%';
+      finalMsg.textContent = `Votre score : ${score} / ${questions.length}.`;
+
+      // encouraging message
+      let msg = '';
+      const pct = Math.round((score/questions.length)*100);
+      if(pct === 100) msg = 'Excellent — parfait !';
+      else if(pct >= 80) msg = 'Très bien — bon travail !';
+      else if(pct >= 50) msg = 'Pas mal — tu peux encore t’améliorer.';
+      else msg = 'Continue d’apprendre — tu vas y arriver !';
+      finalMsg.textContent = `Votre score : ${score} / ${questions.length}. ${msg}`;
+    }
+
+    // keyboard support: 1/2 select
+    window.addEventListener('keydown', (e)=>{
+      if(e.key === '1' || e.key === '2'){
+        const ch = choicesEl.children[Number(e.key)-1];
+        if(ch) ch.click();
+      }
+      if(e.key === 'Enter'){
+        if(!nextBtn.disabled) nextBtn.click();
+      }
+    });
+
+    // init
+    start();
+  </script>
+</body>
+</html>
